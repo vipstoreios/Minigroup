@@ -12,21 +12,7 @@ const productsGrid = document.getElementById('productsGrid');
 const cartItems = document.getElementById('cartItems');
 const clearCart = document.getElementById('clearCart');
 
-const PRODUCTS = [
-  { id: 'tomato', name: 'تەماتە', emoji: '🍅' },
-  { id: 'cucumber', name: 'خەیار', emoji: '🥒' },
-  { id: 'lettuce', name: 'کاهو', emoji: '🥬' },
-  { id: 'potato', name: 'پەتاتە', emoji: '🥔' },
-  { id: 'onion', name: 'پیاز', emoji: '🧅' },
-  { id: 'pepper', name: 'بێبەر', emoji: '🫑' },
-  { id: 'carrot', name: 'گێزەر', emoji: '🥕' },
-  { id: 'lemon', name: 'لیمۆ', emoji: '🍋' },
-  { id: 'apple', name: 'سێڤ', emoji: '🍎' },
-  { id: 'banana', name: 'مۆز', emoji: '🍌' },
-  { id: 'orange', name: 'پرتەقاڵ', emoji: '🍊' },
-  { id: 'grapes', name: 'تری', emoji: '🍇' }
-];
-
+let PRODUCTS = [];
 let cart = [];
 let currentClient = null;
 
@@ -46,14 +32,14 @@ function closeLogin() {
   loginDialog.removeAttribute('open');
 }
 
-function showDashboard(user) {
+async function showDashboard(user) {
   currentClient = user;
   clientName.textContent = user.name || user.email || 'کریار';
   dashboard.hidden = false;
   document.body.style.overflow = 'hidden';
-  renderProducts();
+  await loadProducts();
   renderCart();
-  renderOrders();
+  await renderOrders();
 }
 
 function hideDashboard() {
@@ -61,19 +47,38 @@ function hideDashboard() {
   document.body.style.overflow = '';
 }
 
-function getLocalOrders() {
-  return JSON.parse(localStorage.getItem('minigroup_orders') || '[]');
-}
+async function loadProducts() {
+  if (!supabaseClient) {
+    productsGrid.innerHTML = `<div class="order-card"><p>Supabase گرێنەدایە.</p></div>`;
+    return;
+  }
 
-function setLocalOrders(value) {
-  localStorage.setItem('minigroup_orders', JSON.stringify(value));
+  productsGrid.innerHTML = `<div class="order-card"><p>بەرهەم دهێنە وەرگرتن...</p></div>`;
+  const { data, error } = await supabaseClient
+    .from('products')
+    .select('id,name,emoji,category,is_active,created_at')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    productsGrid.innerHTML = `<div class="order-card"><p>${escapeHTML(error.message)}</p></div>`;
+    return;
+  }
+
+  PRODUCTS = data || [];
+  renderProducts();
 }
 
 function renderProducts() {
+  if (!PRODUCTS.length) {
+    productsGrid.innerHTML = `<div class="order-card"><p>هێشتا بەرهەم نەهاتییە زیادکرن. ل ئەدمین داشبۆردێ بەرهەم زیاد بکە.</p></div>`;
+    return;
+  }
+
   productsGrid.innerHTML = PRODUCTS.map(product => `
     <article class="product-order-card">
-      <div class="product-emoji">${product.emoji}</div>
-      <h3>${product.name}</h3>
+      <div class="product-emoji">${escapeHTML(product.emoji)}</div>
+      <h3>${escapeHTML(product.name)}</h3>
       <button class="plus-btn" type="button" data-add-product="${product.id}">+</button>
     </article>
   `).join('');
@@ -86,7 +91,7 @@ function addProduct(productId) {
     document.getElementById('selectedBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
-  cart.push({ ...product, amount: '', unit: 'kg' });
+  cart.push({ id: product.id, name: product.name, emoji: product.emoji, amount: '', unit: 'kg' });
   renderCart();
   document.getElementById('selectedBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -99,7 +104,7 @@ function renderCart() {
 
   cartItems.innerHTML = cart.map(item => `
     <div class="cart-row" data-cart-row="${item.id}">
-      <div class="cart-name"><span>${item.emoji}</span><strong>${escapeHTML(item.name)}</strong></div>
+      <div class="cart-name"><span>${escapeHTML(item.emoji)}</span><strong>${escapeHTML(item.name)}</strong></div>
       <input type="number" min="0" step="0.1" value="${escapeHTML(item.amount)}" placeholder="بڕ" data-amount="${item.id}" required>
       <select data-unit="${item.id}">
         <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>کیلۆ</option>
@@ -110,37 +115,43 @@ function renderCart() {
   `).join('');
 }
 
-function renderOrders() {
-  if (!currentClient) return;
-  const orders = getLocalOrders().filter(order => order.userId === currentClient.id);
+async function renderOrders() {
+  if (!currentClient || !supabaseClient) return;
+  const { data, error } = await supabaseClient
+    .from('orders')
+    .select('*')
+    .eq('user_id', currentClient.id)
+    .order('created_at', { ascending: false });
 
-  if (!orders.length) {
+  if (error) {
+    ordersContainer.innerHTML = `<div class="order-card"><p>${escapeHTML(error.message)}</p></div>`;
+    return;
+  }
+
+  if (!data?.length) {
     ordersContainer.innerHTML = `<div class="order-card"><p>هێشتا هیچ داخوازەک نەهاتە ناردن.</p></div>`;
     return;
   }
 
-  ordersContainer.innerHTML = orders
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .map(order => `
+  ordersContainer.innerHTML = data.map(order => `
       <article class="order-card">
         <header>
-          <strong>${escapeHTML(order.clientName)}</strong>
-          <span class="status-pill">هاتییە ناردن</span>
+          <strong>${escapeHTML(order.client_name)}</strong>
+          <span class="status-pill">${escapeHTML(order.status || 'new')}</span>
         </header>
         <div class="order-meta">
-          <span>جۆرێ جهی: ${escapeHTML(order.placeType)}</span>
-          <span>دەم: ${escapeHTML(order.neededAt || 'نەهاتە دیارکرن')}</span>
+          <span>جۆرێ جهی: ${escapeHTML(order.place_type)}</span>
+          <span>دەم: ${escapeHTML(order.needed_at || 'نەهاتە دیارکرن')}</span>
           <span>مۆبایل: ${escapeHTML(order.phone)}</span>
           <span>${escapeHTML(order.address)}</span>
         </div>
         <div class="ordered-products">
-          ${order.items.map(item => `<span>${escapeHTML(item.name)}: ${escapeHTML(item.amount)} ${item.unit === 'kg' ? 'کیلۆ' : 'گرام'}</span>`).join('')}
+          ${(order.items || []).map(item => `<span>${escapeHTML(item.name)}: ${escapeHTML(item.amount)} ${item.unit === 'kg' ? 'کیلۆ' : 'گرام'}</span>`).join('')}
         </div>
         ${order.notes ? `<p><b>تێبینی:</b><br>${escapeHTML(order.notes)}</p>` : ''}
-        <small>${new Date(order.createdAt).toLocaleString('ku-IQ')}</small>
+        <small>${new Date(order.created_at).toLocaleString('ku-IQ')}</small>
       </article>
-    `)
-    .join('');
+    `).join('');
 }
 
 function escapeHTML(value) {
@@ -166,7 +177,7 @@ loginForm.addEventListener('submit', async event => {
   loginError.textContent = '';
 
   if (!supabaseClient) {
-    loginError.textContent = 'Supabase هێشتا نەهاتە گرێدان. پێویستە supabaseUrl و supabaseAnonKey ل config.js دابنرێن.';
+    loginError.textContent = 'Supabase هێشتا نەهاتە گرێدان.';
     return;
   }
 
@@ -175,13 +186,13 @@ loginForm.addEventListener('submit', async event => {
   const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
 
   if (error || !data.user) {
-    loginError.textContent = 'ئەم هەژمارە ڕێپێدراو نییە یان پاسوۆرد هەلەیە.';
+    loginError.textContent = error?.message || 'ئەم هەژمارە ڕێپێدراو نییە یان پاسوۆرد هەلەیە.';
     return;
   }
 
   const name = data.user.user_metadata?.name || data.user.email;
   closeLogin();
-  showDashboard({ id: data.user.id, email: data.user.email, name });
+  await showDashboard({ id: data.user.id, email: data.user.email, name });
 });
 
 productsGrid.addEventListener('click', event => {
@@ -227,33 +238,35 @@ orderForm.addEventListener('submit', async event => {
   }
 
   const order = {
-    id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
-    userId: currentClient.id,
-    clientName: currentClient.name || currentClient.email,
-    clientEmail: currentClient.email,
-    placeType: document.getElementById('placeType').value,
-    neededAt: document.getElementById('neededAt').value,
+    user_id: currentClient.id,
+    client_name: currentClient.name || currentClient.email,
+    client_email: currentClient.email,
+    place_type: document.getElementById('placeType').value,
+    needed_at: document.getElementById('neededAt').value || null,
     phone: document.getElementById('phone').value.trim(),
     address: document.getElementById('address').value.trim(),
     items: selectedItems.map(item => ({ id: item.id, name: item.name, amount: item.amount, unit: item.unit })),
-    notes: document.getElementById('notes').value.trim(),
-    createdAt: new Date().toISOString()
+    notes: document.getElementById('notes').value.trim()
   };
 
-  setLocalOrders([...getLocalOrders(), order]);
+  const { error } = await supabaseClient.from('orders').insert(order);
+  if (error) {
+    orderSuccess.textContent = error.message;
+    return;
+  }
+
   cart = [];
   orderForm.reset();
   renderCart();
-  renderOrders();
+  await renderOrders();
   orderSuccess.textContent = 'داخواز هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';
   setTimeout(() => { orderSuccess.textContent = ''; }, 6000);
   document.getElementById('ordersList').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 clearOrders.addEventListener('click', () => {
-  if (!currentClient) return;
-  setLocalOrders(getLocalOrders().filter(order => order.userId !== currentClient.id));
-  renderOrders();
+  cart = [];
+  renderCart();
 });
 
 logoutBtn.addEventListener('click', async () => {
@@ -268,6 +281,6 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session?.user) {
     const user = data.session.user;
-    showDashboard({ id: user.id, email: user.email, name: user.user_metadata?.name || user.email });
+    await showDashboard({ id: user.id, email: user.email, name: user.user_metadata?.name || user.email });
   }
 })();
