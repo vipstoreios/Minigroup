@@ -11,6 +11,7 @@ const logoutBtn = document.getElementById('logoutBtn');
 const productsGrid = document.getElementById('productsGrid');
 const cartItems = document.getElementById('cartItems');
 const clearCart = document.getElementById('clearCart');
+if (clearCart) clearCart.textContent = 'ژێبرنا تمام';
 
 let PRODUCTS = [];
 let cart = [];
@@ -37,6 +38,7 @@ async function showDashboard(user) {
   clientName.textContent = user.name || user.email || 'کریار';
   dashboard.hidden = false;
   document.body.style.overflow = 'hidden';
+  if (clearCart) clearCart.textContent = 'ژێبرنا تمام';
   await loadProducts();
   renderCart();
   await renderOrders();
