@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Products Admin</title>
+  <link rel="stylesheet" href="assets/css/styles.css?v=120">
+</head>
+<body>
+  <main class="site-shell">
+    <header class="topbar glass-card">
+      <a class="brand" href="products-admin.html"><span class="brand-mark">MG</span><span><strong>Admin</strong><small>بەرهەمەکان</small></span></a>
+      <a class="btn btn-soft" href="index.html">وێبسایت</a>
+    </header>
+
+    <section class="order-panel glass-card" id="loginBox">
+      <div class="login-head">
+        <span class="brand-mark">MG</span>
+        <h2>چوونە ژوورا ئەدمینی</h2>
+        <p>بۆ زیادکرن و لابردنا بەرهەمان داخل ببە.</p>
+      </div>
+      <form id="loginForm" class="login-form">
+        <label>ئیمەیڵ<input id="email" type="email" required></label>
+        <label>پاسوۆرد<input id="password" type="password" required></label>
+        <button class="btn btn-primary full" type="submit">داخل بوون</button>
+        <p id="msg" class="error-text"></p>
+      </form>
+    </section>
+
+    <section class="order-panel glass-card" id="dashBox" hidden>
+      <div class="inline-heading"><div><p class="eyebrow">بەرهەم</p><h2>زیادکرن و لابردن</h2></div></div>
+      <form id="productForm" class="order-form">
+        <div class="form-grid">
+          <label>ناڤێ بەرهەمی<input id="productName" required placeholder="ناڤێ بەرهەمی"></label>
+          <label>ئیمۆجی<select id="productEmoji" required>
+            <option value="🍅">🍅 تەماتە</option>
+            <option value="🍎">🍎 سێڤ</option>
+            <option value="🥒">🥒 خەیار</option>
+            <option value="🥬">🥬 کاهو</option>
+            <option value="🥔">🥔 پەتاتە</option>
+            <option value="🧅">🧅 پیاز</option>
+            <option value="🍋">🍋 لیمۆ</option>
+            <option value="🍊">🍊 پرتەقاڵ</option>
+            <option value="🍇">🍇 تری</option>
+          </select></label>
+          <label>جۆر<select id="productCategory"><option value="keskati">کەسکاتی</option><option value="fruit">فێقی</option><option value="other">یێن دی</option></select></label>
+        </div>
+        <button class="btn btn-primary" type="submit">زیادکرنا بەرهەمی</button>
+        <p id="productMsg" class="success-text"></p>
+      </form>
+      <div id="productsBox" class="orders-container"></div>
+    </section>
+  </main>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js?v=120"></script>
+  <script src="assets/js/products-dashboard.js?v=120"></script>
+</body>
+</html>
