@@ -5,18 +5,14 @@ function patchAdminForm() {
   }
 
   const oldEmoji = document.getElementById('productEmoji');
-  if (oldEmoji && oldEmoji.tagName !== 'SELECT') {
-    const select = document.createElement('select');
-    select.id = 'productEmoji';
-    select.required = true;
-    select.innerHTML = [
-      ['🍅','تەماتە'], ['🥒','خەیار'], ['🥬','کاهو'], ['🥔','پەتاتە'],
-      ['🧅','پیاز'], ['🫑','بێبەر'], ['🥕','گێزەر'], ['🍋','لیمۆ'],
-      ['🍎','سێڤ'], ['🍌','مۆز'], ['🍊','پرتەقاڵ'], ['🍇','تری'],
-      ['🍉','شەمامی'], ['🍓','فرێز'], ['🍆','بادمجان'], ['🌽','گەنمەشامی'],
-      ['🧄','سیری'], ['🌶️','فلفل']
-    ].map(item => `<option value="${item[0]}">${item[0]} ${item[1]}</option>`).join('');
-    oldEmoji.replaceWith(select);
+  if (oldEmoji) {
+    const label = oldEmoji.closest('label');
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.id = 'productEmoji';
+    hidden.value = '';
+    if (label) label.replaceWith(hidden);
+    else oldEmoji.replaceWith(hidden);
   }
 
   const note = document.querySelector('#clientForm')?.previousElementSibling;
@@ -66,7 +62,7 @@ async function forceAdminProductList() {
   const db = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   const { data, error } = await db
     .from('products')
-    .select('id,name,emoji,category,is_active,created_at')
+    .select('id,name,category,is_active,created_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -83,7 +79,7 @@ async function forceAdminProductList() {
   box.innerHTML = data.map(item => `
     <article class="order-card">
       <header>
-        <strong>${safeText(item.emoji)} ${safeText(item.name)}</strong>
+        <strong>${safeText(item.name)}</strong>
         <button class="btn btn-soft" type="button" data-force-remove-id="${safeText(item.id)}">لابردن</button>
       </header>
       <div class="order-meta"><span>${safeText(item.category)}</span><span>چالاک</span></div>
