@@ -60,10 +60,10 @@
 
       <section class="order-panel glass-card">
         <div class="inline-heading"><div><p class="eyebrow">کریار</p><h2>تۆمارکرنا کریاری</h2></div></div>
-        <p class="form-note">یوزەرێ Auth ل Supabase Authentication → Users دروست بکە، پاشان UUID ـا وی ل ڤێرێ بنڤیسە بۆ پروفایلێ کریاری.</p>
+        <p class="form-note">UID هەمان User ID ـە ل Supabase. بچۆ Authentication → Users، کلیک ل کریاری بکە، User ID کۆپی بکە و ل ڤێرێ دابنێ.</p>
         <form id="clientForm" class="order-form">
           <div class="form-grid">
-            <label>User ID UUID<input id="clientUserId" required placeholder="UUID ژ Supabase Users"></label>
+            <label>User ID / UID<input id="clientUserId" required placeholder="User ID ژ Supabase Users"></label>
             <label>ناڤێ کریاری<input id="clientNameInput" required placeholder="ناڤێ مەتعەم یان مارکێت"></label>
             <label>جۆرێ کاری<input id="clientBusiness" placeholder="مەتعەم / مارکێت"></label>
             <label>ژمارا مۆبایلی<input id="clientPhone" placeholder="0750..."></label>
@@ -85,5 +85,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="assets/js/config.js"></script>
   <script src="assets/js/admin.js"></script>
+  <script src="assets/js/admin-patch.js"></script>
 </body>
 </html>
