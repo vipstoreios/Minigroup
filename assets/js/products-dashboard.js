@@ -54,12 +54,11 @@ productForm.addEventListener('submit', async event => {
   event.preventDefault();
   productMsg.textContent = '';
   const name = document.getElementById('productName').value.trim();
-  const emoji = document.getElementById('productEmoji').value;
   const category = document.getElementById('productCategory').value;
 
   const { error } = await db.rpc('admin_add_product', {
     p_name: name,
-    p_emoji: emoji,
+    p_emoji: '',
     p_category: category
   });
 
@@ -97,7 +96,7 @@ productsBox.addEventListener('click', async event => {
 async function loadProducts() {
   const { data, error } = await db
     .from('products')
-    .select('id,name,emoji,category,is_active,created_at')
+    .select('id,name,category,is_active,created_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
   if (error) {
@@ -111,7 +110,7 @@ async function loadProducts() {
   productsBox.innerHTML = data.map(item => `
     <article class="order-card">
       <header>
-        <strong>${safe(item.emoji)} ${safe(item.name)}</strong>
+        <strong>${safe(item.name)}</strong>
         <button class="btn btn-soft" type="button" data-remove-id="${safe(item.id)}">لابردن</button>
       </header>
       <div class="order-meta"><span>${safe(item.category)}</span><span>چالاک</span></div>
