@@ -25,5 +25,50 @@ function patchAdminForm() {
   }
 }
 
+function getProductNameFromCard(card) {
+  const title = card.querySelector('strong')?.textContent || '';
+  return title.replace(/[🍅🥒🥬🥔🧅🫑🥕🍋🍎🍌🍊🍇🍉🍓🍆🌽🧄🌶️]/g, '').trim();
+}
+
+function patchProductRemoveButtons() {
+  const box = document.getElementById('adminProducts');
+  if (!box || !window.MINIGROUP_CONFIG || !window.supabase) return;
+
+  box.querySelectorAll('.order-card').forEach(card => {
+    if (card.querySelector('[data-soft-remove]')) return;
+    const name = getProductNameFromCard(card);
+    if (!name || name.includes('هێشتا') || name.includes('permission') || name.includes('policy')) return;
+
+    const header = card.querySelector('header') || card;
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'btn btn-soft';
+    btn.dataset.softRemove = name;
+    btn.textContent = 'لابردن';
+    header.appendChild(btn);
+  });
+}
+
+async function softRemoveProductByName(name) {
+  const cfg = window.MINIGROUP_CONFIG || {};
+  const db = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  const ok = confirm('دڵنیای دڤێت ئەم بەرهەمە ل پەڕێ کڕیاران لابەریت؟');
+  if (!ok) return;
+  const { error } = await db.from('products').update({ is_active: false }).eq('name', name);
+  const msg = document.getElementById('productMessage');
+  if (msg) msg.textContent = error ? error.message : 'بەرهەم ژ پەڕێ کڕیاران هاتە لابردن.';
+  if (!error && typeof loadProducts === 'function') loadProducts();
+}
+
+document.addEventListener('click', event => {
+  const btn = event.target.closest('[data-soft-remove]');
+  if (!btn) return;
+  softRemoveProductByName(btn.dataset.softRemove);
+});
+
 patchAdminForm();
-setInterval(patchAdminForm, 1000);
+patchProductRemoveButtons();
+setInterval(() => {
+  patchAdminForm();
+  patchProductRemoveButtons();
+}, 1000);
