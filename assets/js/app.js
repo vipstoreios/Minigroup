@@ -98,7 +98,7 @@ function addProduct(productId) {
 
 function renderCart() {
   if (!cart.length) {
-    cartItems.innerHTML = `<div class="empty-cart">هێشتا چ مالەک نەهاتە هەلبژارتن. ل گریدێ + بکە.</div>`;
+    cartItems.innerHTML = `<div class="empty-cart">هێشتا چ داخوازی نەهاتینە هەڵبژارتن. هێڤیە بۆ هەڵبژارتنا هەر کەلوپەلەکی کلیك لسەر + بکە</div>`;
     return;
   }
 
@@ -129,7 +129,7 @@ async function renderOrders() {
   }
 
   if (!data?.length) {
-    ordersContainer.innerHTML = `<div class="order-card"><p>هێشتا هیچ داخوازەک نەهاتە ناردن.</p></div>`;
+    ordersContainer.innerHTML = `<div class="order-card"><p>هێشتا هیچ داخوازیەک نەهاتە ناردن.</p></div>`;
     return;
   }
 
@@ -233,7 +233,7 @@ orderForm.addEventListener('submit', async event => {
 
   const selectedItems = cart.filter(item => Number(item.amount) > 0);
   if (!selectedItems.length) {
-    orderSuccess.textContent = 'هیڤیدارین کێمترین یەک مال هەلبژێرە و بڕێ بنڤیسە.';
+    orderSuccess.textContent = 'هیڤیدارین کێمترین یەک داخوازی هەلبژێرە و بڕێ بنڤیسە.';
     return;
   }
 
@@ -259,7 +259,7 @@ orderForm.addEventListener('submit', async event => {
   orderForm.reset();
   renderCart();
   await renderOrders();
-  orderSuccess.textContent = 'داخواز هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';
+  orderSuccess.textContent = 'داخوازی هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';
   setTimeout(() => { orderSuccess.textContent = ''; }, 6000);
   document.getElementById('ordersList').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
