@@ -7,7 +7,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700;800;900&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="assets/css/styles.css" />
+  <link rel="stylesheet" href="assets/css/styles.css?v=280" />
 </head>
 <body>
   <div class="bg-orb orb-a"></div>
@@ -38,17 +38,17 @@
         <div>
           <p class="eyebrow">داشبۆردا ئەدمینی</p>
           <h1>بەرهەم، کریار و داخوازان</h1>
-          <p>ل ڤێرێ بەرهەم بە ئیمۆجی زیاد بکە، کریار تۆمار بکە، و داخوازان ببینە.</p>
+          <p>ل ڤێرێ بەرهەم زیاد بکە، کریار تۆمار بکە، و داخوازان ببینە.</p>
         </div>
         <button class="btn btn-outline" id="adminLogout" type="button">چوونە دەر</button>
       </section>
 
       <section class="order-panel glass-card">
-        <div class="inline-heading"><div><p class="eyebrow">بەرهەم</p><h2>زیادکرنا بەرهەم بە ئیمۆجی</h2></div></div>
+        <div class="inline-heading"><div><p class="eyebrow">بەرهەم</p><h2>زیادکرنا بەرهەم</h2></div></div>
         <form id="productForm" class="order-form">
           <div class="form-grid">
             <label>ناڤێ بەرهەمی<input id="productName" required placeholder="تەماتە"></label>
-            <label>ئیمۆجی<input id="productEmoji" required placeholder="🍅"></label>
+            <input id="productEmoji" type="hidden" value="">
             <label>جۆر<select id="productCategory"><option value="keskati">کەسکاتی</option><option value="fruit">فێقی</option><option value="other">یێن دی</option></select></label>
             <label>ڕێز<input id="productSort" type="number" value="100"></label>
           </div>
@@ -83,8 +83,8 @@
   </main>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  <script src="assets/js/config.js"></script>
-  <script src="assets/js/admin.js"></script>
-  <script src="assets/js/admin-patch.js"></script>
+  <script src="assets/js/config.js?v=280"></script>
+  <script src="assets/js/admin.js?v=280"></script>
+  <script src="assets/js/admin-patch.js?v=280"></script>
 </body>
 </html>
