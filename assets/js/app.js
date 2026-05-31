@@ -58,7 +58,7 @@ async function loadProducts() {
   productsGrid.innerHTML = `<div class="order-card"><p>بەرهەم دهێنە وەرگرتن...</p></div>`;
   const { data, error } = await supabaseClient
     .from('products')
-    .select('id,name,emoji,category,is_active,created_at')
+    .select('id,name,category,is_active,created_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -79,7 +79,6 @@ function renderProducts() {
 
   productsGrid.innerHTML = PRODUCTS.map(product => `
     <article class="product-order-card">
-      <div class="product-emoji">${escapeHTML(product.emoji)}</div>
       <h3>${escapeHTML(product.name)}</h3>
       <button class="plus-btn" type="button" data-add-product="${product.id}">+</button>
     </article>
@@ -93,7 +92,7 @@ function addProduct(productId) {
     document.getElementById('selectedBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
     return;
   }
-  cart.push({ id: product.id, name: product.name, emoji: product.emoji, amount: '', unit: 'kg' });
+  cart.push({ id: product.id, name: product.name, amount: '', unit: 'kg' });
   renderCart();
   document.getElementById('selectedBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
@@ -106,7 +105,7 @@ function renderCart() {
 
   cartItems.innerHTML = cart.map(item => `
     <div class="cart-row" data-cart-row="${item.id}">
-      <div class="cart-name"><span>${escapeHTML(item.emoji)}</span><strong>${escapeHTML(item.name)}</strong></div>
+      <div class="cart-name"><strong>${escapeHTML(item.name)}</strong></div>
       <input type="number" min="0" step="0.1" value="${escapeHTML(item.amount)}" placeholder="بڕ" data-amount="${item.id}" required>
       <select data-unit="${item.id}">
         <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>کیلۆ</option>
