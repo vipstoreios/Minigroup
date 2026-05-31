@@ -20,9 +20,7 @@ function patchAdminForm() {
   }
 
   const note = document.querySelector('#clientForm')?.previousElementSibling;
-  if (note) {
-    note.textContent = 'UID هەمان User ID ـە ل Supabase. بچۆ Authentication → Users، کلیک ل کریاری بکە، User ID کۆپی بکە و ل ڤێرێ دابنێ.';
-  }
+  if (note) note.textContent = 'UID هەمان User ID ـە ل Supabase. بچۆ Authentication → Users، کلیک ل کریاری بکە، User ID کۆپی بکە و ل ڤێرێ دابنێ.';
 }
 
 function patchWords() {
@@ -49,56 +47,71 @@ function patchWords() {
   });
 }
 
-function getProductIdFromCard(card) {
-  const btn = card.querySelector('[data-remove-product]');
-  return btn?.dataset?.removeProduct || '';
+function safeText(value) {
+  return String(value || '')
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
 }
 
-function patchProductRemoveButtons() {
+async function forceAdminProductList() {
   const box = document.getElementById('adminProducts');
-  if (!box || !window.MINIGROUP_CONFIG || !window.supabase) return;
+  const dash = document.getElementById('adminDashboard');
+  const cfg = window.MINIGROUP_CONFIG || {};
+  if (!box || !cfg.supabaseUrl || !cfg.supabaseAnonKey || !window.supabase) return;
+  if (dash && dash.hidden) return;
 
-  box.querySelectorAll('.order-card').forEach(card => {
-    const old = card.querySelector('[data-soft-remove]');
-    if (old) old.remove();
-    const id = getProductIdFromCard(card);
-    if (!id) return;
-    const header = card.querySelector('header') || card;
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'btn btn-soft';
-    btn.dataset.softRemoveId = id;
-    btn.textContent = 'لابردن';
-    header.appendChild(btn);
-  });
+  const db = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
+  const { data, error } = await db
+    .from('products')
+    .select('id,name,emoji,category,is_active,created_at')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
+
+  if (error) {
+    box.innerHTML = `<div class="order-card"><p>${safeText(error.message)}</p></div>`;
+    return;
+  }
+
+  if (!data || !data.length) {
+    box.innerHTML = '<div class="order-card"><p>هێشتا بەرهەم نەهاتییە زیادکرن.</p></div>';
+    return;
+  }
+
+  box.innerHTML = data.map(item => `
+    <article class="order-card">
+      <header>
+        <strong>${safeText(item.emoji)} ${safeText(item.name)}</strong>
+        <button class="btn btn-soft" type="button" data-force-remove-id="${safeText(item.id)}">لابردن</button>
+      </header>
+      <div class="order-meta"><span>${safeText(item.category)}</span><span>چالاک</span></div>
+    </article>
+  `).join('');
 }
 
-async function softRemoveProductById(id) {
+async function removeProduct(id) {
   const cfg = window.MINIGROUP_CONFIG || {};
   const db = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
-  const ok = confirm('دڵنیای دڤێت ئەم بەرهەمە ل پەڕێ کڕیاران لابەریت؟');
-  if (!ok) return;
+  if (!confirm('دڵنیای دڤێت ئەم بەرهەمە لابەریت؟')) return;
   const { error } = await db.from('products').update({ is_active: false }).eq('id', id);
   const msg = document.getElementById('productMessage');
-  if (msg) msg.textContent = error ? error.message : 'بەرهەم ژ پەڕێ کڕیاران هاتە لابردن.';
-  if (!error) {
-    const card = document.querySelector(`[data-soft-remove-id="${id}"]`)?.closest('.order-card');
-    if (card) card.remove();
-    if (typeof loadProducts === 'function') loadProducts();
-  }
+  if (msg) msg.textContent = error ? error.message : 'بەرهەم هاتە لابردن.';
+  if (!error) await forceAdminProductList();
 }
 
 document.addEventListener('click', event => {
-  const btn = event.target.closest('[data-soft-remove-id]');
+  const btn = event.target.closest('[data-force-remove-id]');
   if (!btn) return;
-  softRemoveProductById(btn.dataset.softRemoveId);
+  removeProduct(btn.dataset.forceRemoveId);
 });
 
 patchAdminForm();
 patchWords();
-patchProductRemoveButtons();
+setTimeout(forceAdminProductList, 1200);
 setInterval(() => {
   patchAdminForm();
   patchWords();
-  patchProductRemoveButtons();
-}, 1000);
+  forceAdminProductList();
+}, 4000);
