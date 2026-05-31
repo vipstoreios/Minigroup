@@ -45,11 +45,7 @@
           </div>
         </div>
         <div class="hero-visual">
-          <div class="photo-card photo-main">
-            <div class="produce-grid">
-              <span>🍅</span><span>🥒</span><span>🥬</span><span>🥔</span><span>🧅</span><span>🍎</span><span>🍌</span><span>🍊</span>
-            </div>
-          </div>
+          <div class="photo-card photo-main"><div class="produce-grid"><span>🍅</span><span>🥒</span><span>🥬</span><span>🥔</span><span>🧅</span><span>🍎</span><span>🍌</span><span>🍊</span></div></div>
           <div class="floating-panel panel-login"><span class="mini-icon">🔐</span><strong>هەژمارا تایبەت</strong><p>تەنێ کریارێ ڕێپێدراوی دشێت داخوازێ بنێریت.</p></div>
           <div class="floating-panel panel-order"><span class="mini-icon">➕</span><strong>پڵەس + بڕ</strong><p>ل سەر مالێ + بکە، بڕێ بنڤیسە، کیلۆ یان گرام هەلبژێرە.</p></div>
         </div>
@@ -79,16 +75,12 @@
   <dialog class="login-dialog" id="loginDialog">
     <div class="dialog-card glass-card">
       <button class="close-btn" data-close-login aria-label="گرتن">×</button>
-      <div class="login-head">
-        <span class="brand-mark">MG</span>
-        <h2>چوونە ژوور</h2>
-        <p>یوزەرنەیم و پاسوۆردا کریاری داخل بکە.</p>
-      </div>
+      <div class="login-head"><span class="brand-mark">MG</span><h2>چوونە ژوور</h2><p>ئیمەیڵ و پاسوۆردا کریاری داخل بکە.</p></div>
       <form id="loginForm" class="login-form">
-        <label>یوزەرنەیم<input id="username" type="text" autocomplete="username" placeholder="یوزەرنەیمێ کریاری" required></label>
+        <label>ئیمەیڵ<input id="username" type="email" autocomplete="username" placeholder="ئیمەیڵێ کریاری" required></label>
         <label>پاسوۆرد<input id="password" type="password" autocomplete="current-password" placeholder="پاسوۆرد" required></label>
         <button class="btn btn-primary full" type="submit">داخل بوون</button>
-        <p class="form-note">هەژمار تەنێ ژ لایێ ئەدمینی ڤە دهێنە دروستکرن.</p>
+        <p class="form-note">تەنێ ئەو هەژمارێن ئەدمین دروست کری دشێن داخل ببن.</p>
         <p id="loginError" class="error-text" role="alert"></p>
       </form>
     </div>
@@ -98,56 +90,28 @@
     <div class="dashboard-shell">
       <aside class="dashboard-side glass-card">
         <a class="brand" href="#dashboard"><span class="brand-mark">MG</span><span><strong>Minigroup</strong><small id="clientName">کریار</small></span></a>
-        <nav>
-          <a class="active" href="#new-order">داخوازیا نوی</a>
-          <a href="#selectedBox">مالێن هەلبژارتی</a>
-          <a href="#ordersList">داخوازێن من</a>
-        </nav>
+        <nav><a class="active" href="#new-order">داخوازیا نوی</a><a href="#selectedBox">مالێن هەلبژارتی</a><a href="#ordersList">داخوازێن من</a></nav>
         <button class="btn btn-outline full" id="logoutBtn">چوونە دەر</button>
       </aside>
-
       <main class="dashboard-main">
-        <section class="dash-hero glass-card">
-          <div>
-            <p class="eyebrow">داشبۆردا کریاری</p>
-            <h1>کەسکاتی و فێقی هەلبژێرە</h1>
-            <p>ل سەر + دەست بنێ، بڕ ب کیلۆ یان گرام بنڤیسە، پاشان داخوازێ بنێرە. بها ل ڤێرێ نییە.</p>
-          </div>
-          <span class="status-pill">هەژمارا ڕێپێدراو</span>
-        </section>
-
-        <section id="new-order" class="order-panel glass-card">
-          <div class="inline-heading">
-            <div><p class="eyebrow">گریدێ مالان</p><h2>مال هەلبژێرە</h2></div>
-            <span class="no-price-pill">بێ بها</span>
-          </div>
-          <div id="productsGrid" class="order-products-grid"></div>
-        </section>
-
+        <section class="dash-hero glass-card"><div><p class="eyebrow">داشبۆردا کریاری</p><h1>کەسکاتی و فێقی هەلبژێرە</h1><p>ل سەر + دەست بنێ، بڕ ب کیلۆ یان گرام بنڤیسە، پاشان داخوازێ بنێرە. بها ل ڤێرێ نییە.</p></div><span class="status-pill">هەژمارا ڕێپێدراو</span></section>
+        <section id="new-order" class="order-panel glass-card"><div class="inline-heading"><div><p class="eyebrow">گریدێ مالان</p><h2>مال هەلبژێرە</h2></div><span class="no-price-pill">بێ بها</span></div><div id="productsGrid" class="order-products-grid"></div></section>
         <section id="selectedBox" class="order-panel glass-card">
           <div class="inline-heading"><div><p class="eyebrow">داخواز</p><h2>مالێن هەلبژارتی</h2></div><button class="btn btn-soft" id="clearCart" type="button">پاککرنەوە</button></div>
           <div id="cartItems" class="cart-items"></div>
           <form id="orderForm" class="order-form">
-            <div class="form-grid">
-              <label>جۆرێ جهی<select id="placeType" required><option value="">هەلبژێرە</option><option>مەتعەم</option><option>مارکێت</option><option>جهێ گەشتیاری</option><option>هۆتێل/کافێ</option></select></label>
-              <label>دەمێ پێدڤی<input id="neededAt" type="datetime-local" required></label>
-              <label>ژمارا پەیوەندیێ<input id="phone" type="tel" placeholder="ژمارا پەیوەندیێ" required></label>
-              <label>ناڤ و نیشانا گەهاندنێ<input id="address" type="text" placeholder="ناڤ و نیشانا ورد" required></label>
-            </div>
+            <div class="form-grid"><label>جۆرێ جهی<select id="placeType" required><option value="">هەلبژێرە</option><option>مەتعەم</option><option>مارکێت</option><option>جهێ گەشتیاری</option><option>هۆتێل/کافێ</option></select></label><label>دەمێ پێدڤی<input id="neededAt" type="datetime-local" required></label><label>ژمارا پەیوەندیێ<input id="phone" type="tel" placeholder="ژمارا پەیوەندیێ" required></label><label>ناڤ و نیشانا گەهاندنێ<input id="address" type="text" placeholder="ناڤ و نیشانا ورد" required></label></div>
             <label>تێبینی<textarea id="notes" rows="3" placeholder="دەم، جۆرێ تایبەت، کوالیتی، یان هەر تێبینیەک"></textarea></label>
-            <button class="btn btn-primary" type="submit">ناردنا داخوازێ</button>
-            <p class="success-text" id="orderSuccess"></p>
+            <button class="btn btn-primary" type="submit">ناردنا داخوازێ</button><p class="success-text" id="orderSuccess"></p>
           </form>
         </section>
-
-        <section id="ordersList" class="orders-list glass-card">
-          <div class="inline-heading"><div><p class="eyebrow">تۆمار</p><h2>داخوازێن من</h2></div><button class="btn btn-soft" id="clearOrders" type="button">ژێبرنا تۆمارێ</button></div>
-          <div id="ordersContainer" class="orders-container"></div>
-        </section>
+        <section id="ordersList" class="orders-list glass-card"><div class="inline-heading"><div><p class="eyebrow">تۆمار</p><h2>داخوازێن من</h2></div><button class="btn btn-soft" id="clearOrders" type="button">ژێبرنا تۆمارێ</button></div><div id="ordersContainer" class="orders-container"></div></section>
       </main>
     </div>
   </section>
 
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
   <script src="assets/js/app.js"></script>
 </body>
 </html>
