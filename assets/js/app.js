@@ -9,11 +9,7 @@ const ordersContainer = document.getElementById('ordersContainer');
 const clearOrders = document.getElementById('clearOrders');
 const logoutBtn = document.getElementById('logoutBtn');
 
-const DEMO_USERS = [
-  { username: 'demo', password: '123456', name: 'کڕیاری دیمۆ' },
-  { username: 'restaurant', password: '123456', name: 'مەتعەمی دیمۆ' },
-  { username: 'market', password: '123456', name: 'مارکێتی دیمۆ' }
-];
+const AUTHORIZED_USERS = [];
 
 const store = {
   get session() {
@@ -116,10 +112,10 @@ loginForm.addEventListener('submit', event => {
   event.preventDefault();
   const username = document.getElementById('username').value.trim();
   const password = document.getElementById('password').value.trim();
-  const user = DEMO_USERS.find(item => item.username === username && item.password === password);
+  const user = AUTHORIZED_USERS.find(item => item.username === username && item.password === password);
 
   if (!user) {
-    loginError.textContent = 'یوزەر یان پاسوۆرد هەڵەیە. بۆ دیمۆ demo / 123456 بەکاربهێنە.';
+    loginError.textContent = 'هەژمارەکەت ڕێپێدراو نییە یان هێشتا لە سیستەمی ڕاستەقینە چالاک نەکراوە.';
     return;
   }
 
