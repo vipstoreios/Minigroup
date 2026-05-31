@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ku" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minigroup Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Arabic:wght@400;500;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.css" />
+</head>
+<body>
+  <div class="bg-orb orb-a"></div>
+  <div class="bg-orb orb-b"></div>
+
+  <main class="site-shell">
+    <header class="topbar glass-card">
+      <a class="brand" href="admin.html"><span class="brand-mark">MG</span><span><strong>Admin</strong><small>داشبۆردا Minigroup</small></span></a>
+      <a class="btn btn-soft" href="index.html">ڤەگەڕێ بۆ وێبسایتێ</a>
+    </header>
+
+    <section class="order-panel glass-card" id="adminLoginBox">
+      <div class="login-head">
+        <span class="brand-mark">MG</span>
+        <h2>چوونە ژوورا ئەدمینی</h2>
+        <p>تەنێ ئەدمین دشێت بەرهەم و کریاران ببینیت.</p>
+      </div>
+      <form id="adminLoginForm" class="login-form">
+        <label>ئیمەیڵ<input id="adminEmail" type="email" required placeholder="ئیمەیڵێ ئەدمینی"></label>
+        <label>پاسوۆرد<input id="adminPassword" type="password" required placeholder="پاسوۆرد"></label>
+        <button class="btn btn-primary full" type="submit">داخل بوون</button>
+        <p id="adminLoginError" class="error-text"></p>
+      </form>
+    </section>
+
+    <section id="adminDashboard" class="dashboard-main" hidden>
+      <section class="dash-hero glass-card">
+        <div>
+          <p class="eyebrow">داشبۆردا ئەدمینی</p>
+          <h1>بەرهەم، کریار و داخوازان</h1>
+          <p>ل ڤێرێ بەرهەم بە ئیمۆجی زیاد بکە، کریار تۆمار بکە، و داخوازان ببینە.</p>
+        </div>
+        <button class="btn btn-outline" id="adminLogout" type="button">چوونە دەر</button>
+      </section>
+
+      <section class="order-panel glass-card">
+        <div class="inline-heading"><div><p class="eyebrow">بەرهەم</p><h2>زیادکرنا بەرهەم بە ئیمۆجی</h2></div></div>
+        <form id="productForm" class="order-form">
+          <div class="form-grid">
+            <label>ناڤێ بەرهەمی<input id="productName" required placeholder="تەماتە"></label>
+            <label>ئیمۆجی<input id="productEmoji" required placeholder="🍅"></label>
+            <label>جۆر<select id="productCategory"><option value="keskati">کەسکاتی</option><option value="fruit">فێقی</option><option value="other">یێن دی</option></select></label>
+            <label>ڕێز<input id="productSort" type="number" value="100"></label>
+          </div>
+          <button class="btn btn-primary" type="submit">زیادکرنا بەرهەمی</button>
+          <p id="productMessage" class="success-text"></p>
+        </form>
+        <div id="adminProducts" class="orders-container"></div>
+      </section>
+
+      <section class="order-panel glass-card">
+        <div class="inline-heading"><div><p class="eyebrow">کریار</p><h2>تۆمارکرنا کریاری</h2></div></div>
+        <p class="form-note">یوزەرێ Auth ل Supabase Authentication → Users دروست بکە، پاشان UUID ـا وی ل ڤێرێ بنڤیسە بۆ پروفایلێ کریاری.</p>
+        <form id="clientForm" class="order-form">
+          <div class="form-grid">
+            <label>User ID UUID<input id="clientUserId" required placeholder="UUID ژ Supabase Users"></label>
+            <label>ناڤێ کریاری<input id="clientNameInput" required placeholder="ناڤێ مەتعەم یان مارکێت"></label>
+            <label>جۆرێ کاری<input id="clientBusiness" placeholder="مەتعەم / مارکێت"></label>
+            <label>ژمارا مۆبایلی<input id="clientPhone" placeholder="0750..."></label>
+            <label>ناڤ و نیشان<input id="clientAddress" placeholder="دهۆک..."></label>
+          </div>
+          <button class="btn btn-primary" type="submit">تۆمارکرنا کریاری</button>
+          <p id="clientMessage" class="success-text"></p>
+        </form>
+        <div id="adminClients" class="orders-container"></div>
+      </section>
+
+      <section class="orders-list glass-card">
+        <div class="inline-heading"><div><p class="eyebrow">داخواز</p><h2>داخوازێن کریاران</h2></div><button id="refreshOrders" class="btn btn-soft" type="button">نویکرنەوە</button></div>
+        <div id="adminOrders" class="orders-container"></div>
+      </section>
+    </section>
+  </main>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="assets/js/config.js"></script>
+  <script src="assets/js/admin.js"></script>
+</body>
+</html>
