@@ -21,8 +21,10 @@ async function isAdmin() {
   const { data } = await db.auth.getUser();
   const user = data.user;
   if (!user) return false;
-  const { data: row } = await db.from('admin_users').select('user_id').eq('user_id', user.id).maybeSingle();
-  return !!row;
+  const direct = await db.from('admin_users').select('user_id').eq('user_id', user.id).maybeSingle();
+  if (direct.data) return true;
+  const rpc = await db.rpc('is_minigroup_admin');
+  return !!rpc.data;
 }
 
 async function openDashboard() {
@@ -42,7 +44,7 @@ loginForm.addEventListener('submit', async event => {
     return;
   }
   if (!(await isAdmin())) {
-    msg.textContent = 'ئەم هەژمارە ئەدمین نییە.';
+    msg.textContent = 'ئەم هەژمارە ئەدمین نییە. تکایە SQL ـی admin_product_rpc.sql Run بکە.';
     return;
   }
   openDashboard();
@@ -51,15 +53,20 @@ loginForm.addEventListener('submit', async event => {
 productForm.addEventListener('submit', async event => {
   event.preventDefault();
   productMsg.textContent = '';
-  const product = {
-    name: document.getElementById('productName').value.trim(),
-    emoji: document.getElementById('productEmoji').value,
-    category: document.getElementById('productCategory').value,
-    is_active: true
-  };
-  const { error } = await db.from('products').insert(product);
+  const name = document.getElementById('productName').value.trim();
+  const emoji = document.getElementById('productEmoji').value;
+  const category = document.getElementById('productCategory').value;
+
+  const { error } = await db.rpc('admin_add_product', {
+    p_name: name,
+    p_emoji: emoji,
+    p_category: category
+  });
+
   if (error) {
-    productMsg.textContent = error.message;
+    productMsg.textContent = error.message.includes('not_admin')
+      ? 'ئەم هەژمارە ئەدمین نییە. SQL ـی admin_product_rpc.sql Run بکە.'
+      : error.message;
     return;
   }
   productForm.reset();
@@ -72,9 +79,15 @@ productsBox.addEventListener('click', async event => {
   if (!btn) return;
   if (!confirm('دڵنیای دڤێت ئەم بەرهەمە لابەریت؟')) return;
   productMsg.textContent = '';
-  const { error } = await db.from('products').update({ is_active: false }).eq('id', btn.dataset.removeId);
+
+  const { error } = await db.rpc('admin_hide_product', {
+    p_id: btn.dataset.removeId
+  });
+
   if (error) {
-    productMsg.textContent = error.message;
+    productMsg.textContent = error.message.includes('not_admin')
+      ? 'ئەم هەژمارە ئەدمین نییە. SQL ـی admin_product_rpc.sql Run بکە.'
+      : error.message;
     return;
   }
   productMsg.textContent = 'بەرهەم هاتە لابردن.';
@@ -82,7 +95,11 @@ productsBox.addEventListener('click', async event => {
 });
 
 async function loadProducts() {
-  const { data, error } = await db.from('products').select('id,name,emoji,category,is_active,created_at').eq('is_active', true).order('created_at', { ascending: false });
+  const { data, error } = await db
+    .from('products')
+    .select('id,name,emoji,category,is_active,created_at')
+    .eq('is_active', true)
+    .order('created_at', { ascending: false });
   if (error) {
     productsBox.innerHTML = '<div class="order-card"><p>' + safe(error.message) + '</p></div>';
     return;
