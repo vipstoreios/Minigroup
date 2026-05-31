@@ -13,7 +13,7 @@ const cartItems = document.getElementById('cartItems');
 const clearCart = document.getElementById('clearCart');
 
 const AUTHORIZED_USERS = [
-  { username: 'client1', password: '123456', name: 'کڕیاری یەکەم' }
+  { username: 'client1', password: '123456', name: 'کریارێ ئێکێ' }
 ];
 
 const PRODUCTS = [
@@ -25,31 +25,110 @@ const PRODUCTS = [
   { id: 'pepper', name: 'بێبەر', emoji: '🫑' },
   { id: 'carrot', name: 'گێزەر', emoji: '🥕' },
   { id: 'lemon', name: 'لیمۆ', emoji: '🍋' },
-  { id: 'apple', name: 'سێو', emoji: '🍎' },
+  { id: 'apple', name: 'سێڤ', emoji: '🍎' },
   { id: 'banana', name: 'مۆز', emoji: '🍌' },
   { id: 'orange', name: 'پرتەقاڵ', emoji: '🍊' },
-  { id: 'grapes', name: 'ترێ', emoji: '🍇' }
+  { id: 'grapes', name: 'تری', emoji: '🍇' }
 ];
 
 let cart = [];
 
 const store = {
-  get session() {
-    return JSON.parse(localStorage.getItem('minigroup_session') || 'null');
-  },
-  set session(value) {
-    localStorage.setItem('minigroup_session', JSON.stringify(value));
-  },
-  clearSession() {
-    localStorage.removeItem('minigroup_session');
-  },
-  get orders() {
-    return JSON.parse(localStorage.getItem('minigroup_orders') || '[]');
-  },
-  set orders(value) {
-    localStorage.setItem('minigroup_orders', JSON.stringify(value));
-  }
+  get session() { return JSON.parse(localStorage.getItem('minigroup_session') || 'null'); },
+  set session(value) { localStorage.setItem('minigroup_session', JSON.stringify(value)); },
+  clearSession() { localStorage.removeItem('minigroup_session'); },
+  get orders() { return JSON.parse(localStorage.getItem('minigroup_orders') || '[]'); },
+  set orders(value) { localStorage.setItem('minigroup_orders', JSON.stringify(value)); }
 };
+
+function translateStaticToBadini() {
+  document.documentElement.lang = 'ku';
+  document.title = 'Minigroup | داخوازیا کەسکاتی و فێقی';
+  const meta = document.querySelector('meta[name="description"]');
+  if (meta) meta.content = 'وێبسایتەکا تایبەت بۆ مەتعەم، مارکێت و جهێن گەشتیاری بۆ داخوازیا کەسکاتی و فێقی بێ نیشاندانا بها.';
+
+  const replacements = new Map([
+    ['داواکاری تایبەتی سەوزە و فێقی', 'داخوازیا تایبەت یا کەسکاتی و فێقی'],
+    ['داواکاری سەوزە و فێقی بە شێوەیەکی تایبەت و پرۆفیشناڵ', 'داخوازیا کەسکاتی و فێقی ب شێوازەکێ تایبەت و پرۆفیشناڵ'],
+    ['تەنها بۆ کڕیاری کاری', 'تەنێ بۆ کریارێن کاری'],
+    ['کڕیار داخل دەبێت، لە گریدەکە سەوزە هەڵدەبژێرێت و بڕ دەنووسێت', 'کریار داخل دبیت، ژ گریدێ کەسکاتی هەلدبژێریت و بڕێ دنڤیسیت'],
+    ['لاگین بکە بۆ داواکاری', 'لاگین بکە بۆ داخوازێ'],
+    ['بینینی شێوازی کارکردن', 'بینینا شێوازێ کارکرنێ'],
+    ['بە ناوی کڕیار', 'ب ناڤێ کریاری'],
+    ['داواکاری لەسەر هەژمار تۆمار دەبێت', 'داخوازیا وی ل سەر هەژمارێ تۆمار دبیت'],
+    ['هەڵبژاردنی خێرای سەوزە و فێقی', 'هەلبژارتنا بلەزا کەسکاتی و فێقی'],
+    ['بێ نرخ', 'بێ بها'],
+    ['نرخ لە پەیوەندی دیاری دەکرێت', 'بها د پەیوەندیێدا دیار دبیت'],
+    ['هەژماری تایبەت', 'هەژمارا تایبەت'],
+    ['تەنها کڕیاری ڕێپێدراو دەتوانێت داواکاری بنێرێت.', 'تەنێ کریارێ ڕێپێدراوی دشێت داخوازێ بنێریت.'],
+    ['پڵەس + بڕ', 'پڵەس + بڕ'],
+    ['لەسەر کاڵا + بکە، بڕ بنووسە، کیلۆ یان گرام هەڵبژێرە.', 'ل سەر مالێ + بکە، بڕێ بنڤیسە، کیلۆ یان گرام هەلبژێرە.'],
+    ['ڕێگای کارکردن', 'ڕێکا کارکرنێ'],
+    ['سیستەمی داواکاری بە گرید', 'سیستەمێ داخوازێ ب گریدێ'],
+    ['تۆ یوزەر درووست دەکەیت', 'تۆ یوزەر دروست دکەی'],
+    ['هەر کڕیار هەژماری خۆی هەیە، بۆیە ئێوە دەزانن داواکارییەکە لە کێوە هاتووە.', 'هەر کریارەک هەژمارا خۆ هەیە، بۆیە هۆن دزانن داخوازێ ژ کێ هاتییە.'],
+    ['کڕیار داخل دەبێت', 'کریار داخل دبیت'],
+    ['دوای لاگین، داشبۆردی تایبەتی داواکاری بۆی دەکرێتەوە.', 'پشتی لاگینێ، داشبۆردا تایبەتی یا داخوازێ بۆی ڤەدبیت.'],
+    ['لە گرید + دەکات', 'ل گریدێ + دکەت'],
+    ['سەوزە و فێقی بە کارت دەردەکەون، کڕیار بڕ بە کیلۆ یان گرام دەنووسێت.', 'کەسکاتی و فێقی ب کارت دێنە نیشاندان، کریار بڕ ب کیلۆ یان گرام دنڤیسیت.'],
+    ['ئێوە داواکاری دەبینن', 'هۆن داخوازێ دبینن'],
+    ['داواکاری بە ناوی کڕیار، ژمارە، ناونیشان و لیستی کاڵا دەگاتە لای ئێوە.', 'داخواز ب ناڤێ کریاری، ژمارە، ناڤ و نیشان و لیستا مالان دگەهیتە لای هەوە.'],
+    ['بۆ کێیە؟', 'بۆ کێیە؟'],
+    ['نەک بۆ تاکە کەس', 'نەک بۆ تاکە کەس'],
+    ['مەتعەمەکان', 'مەتعەم'],
+    ['داواکاری ڕۆژانەی سەوزە و فێقی.', 'داخوازیا ڕۆژانە یا کەسکاتی و فێقی.'],
+    ['مارکێتەکان', 'مارکێت'],
+    ['پڕکردنەوەی کاڵا بە بڕی زۆر.', 'پڕکرنا مالان ب بڕەکا زۆر.'],
+    ['شوێنە گەشتیارییەکان', 'جهێن گەشتیاری'],
+    ['هۆتێل، کافێ، گەشتخانە و شوێنی پشوو.', 'هۆتێل، کافێ، گەشتخانە و جهێن پشوو.'],
+    ['چوونەژوورەوە', 'چوونە ژوور'],
+    ['چوونەژوورەوە 🔐', 'چوونە ژوور 🔐'],
+    ['یوزەرنەیم و پاسوۆردی کڕیار داخل بکە.', 'یوزەرنەیم و پاسوۆردا کریاری داخل بکە.'],
+    ['یوزەرنەیمی کڕیار', 'یوزەرنەیمێ کریاری'],
+    ['هەژمارەکان لەلایەن ئەدمینەوە درووست دەکرێن.', 'هەژمار تەنێ ژ لایێ ئەدمینی ڤە دهێنە دروستکرن.'],
+    ['کڕیار', 'کریار'],
+    ['داواکاری نوێ', 'داخوازیا نوی'],
+    ['کاڵای هەڵبژێردراو', 'مالێن هەلبژارتی'],
+    ['داواکارییەکانم', 'داخوازێن من'],
+    ['چوونەدەرەوە', 'چوونە دەر'],
+    ['داشبۆردی کڕیار', 'داشبۆردا کریاری'],
+    ['سەوزە و فێقی هەڵبژێرە', 'کەسکاتی و فێقی هەلبژێرە'],
+    ['لەسەر + دەست بنێ، بڕ بە کیلۆ یان گرام بنووسە، پاشان داواکاری بنێرە. نرخ لێرە نییە.', 'ل سەر + دەست بنێ، بڕ ب کیلۆ یان گرام بنڤیسە، پاشان داخوازێ بنێرە. بها ل ڤێرێ نییە.'],
+    ['هەژماری ڕێپێدراو', 'هەژمارا ڕێپێدراو'],
+    ['گریدی کاڵاکان', 'گریدێ مالان'],
+    ['کاڵا هەڵبژێرە', 'مال هەلبژێرە'],
+    ['بێ نرخ', 'بێ بها'],
+    ['داواکاری', 'داخواز'],
+    ['پاککردنەوە', 'پاککرنەوە'],
+    ['جۆری شوێن', 'جۆرێ جهی'],
+    ['هەڵبژێرە', 'هەلبژێرە'],
+    ['شوێنی گەشتیاری', 'جهێ گەشتیاری'],
+    ['کاتی پێویست', 'دەمێ پێدڤی'],
+    ['ژمارەی پەیوەندی', 'ژمارا پەیوەندیێ'],
+    ['شوێنی گەیاندن', 'ناڤ و نیشانا گەهاندنێ'],
+    ['تێبینی', 'تێبینی'],
+    ['ناردنی داواکاری', 'ناردنا داخوازێ'],
+    ['تۆمار', 'تۆمار'],
+    ['سڕینەوەی تۆمار', 'ژێبرنا تۆمارێ']
+  ]);
+
+  const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+  const nodes = [];
+  while (walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(node => {
+    const text = node.nodeValue.trim();
+    if (replacements.has(text)) node.nodeValue = node.nodeValue.replace(text, replacements.get(text));
+  });
+
+  document.querySelectorAll('[placeholder]').forEach(el => {
+    const value = el.getAttribute('placeholder');
+    if (replacements.has(value)) el.setAttribute('placeholder', replacements.get(value));
+    if (value === 'ژمارەی پەیوەندی') el.setAttribute('placeholder', 'ژمارا پەیوەندیێ');
+    if (value === 'ناونیشانی ورد') el.setAttribute('placeholder', 'ناڤ و نیشانا ورد');
+    if (value === 'لیستی کاڵاکان و بڕی پێویست بنووسە') el.setAttribute('placeholder', 'لیستا مالان و بڕێ پێدڤی بنڤیسە');
+    if (value === 'کات، جۆری تایبەت، کیفیت، یان هەر تێبینییەک') el.setAttribute('placeholder', 'دەم، جۆرێ تایبەت، کوالیتی، یان هەر تێبینیەک');
+  });
+}
 
 function openLogin() {
   loginError.textContent = '';
@@ -69,6 +148,7 @@ function showDashboard(user) {
   renderProducts();
   renderCart();
   renderOrders();
+  translateStaticToBadini();
 }
 
 function hideDashboard() {
@@ -100,7 +180,7 @@ function addProduct(productId) {
 
 function renderCart() {
   if (!cart.length) {
-    cartItems.innerHTML = `<div class="empty-cart">هێشتا هیچ کاڵایەک هەڵنەبژێردراوە. لە گریدەکە + بکە.</div>`;
+    cartItems.innerHTML = `<div class="empty-cart">هێشتا چ مالەک نەهاتە هەلبژارتن. ل گریدێ + بکە.</div>`;
     return;
   }
 
@@ -122,7 +202,7 @@ function renderOrders() {
   const orders = store.orders.filter(order => !session || order.username === session.username);
 
   if (!orders.length) {
-    ordersContainer.innerHTML = `<div class="order-card"><p>هێشتا هیچ داواکارییەک نەنێردراوە.</p></div>`;
+    ordersContainer.innerHTML = `<div class="order-card"><p>هێشتا هیچ داخوازەک نەهاتە ناردن.</p></div>`;
     return;
   }
 
@@ -132,11 +212,11 @@ function renderOrders() {
       <article class="order-card">
         <header>
           <strong>${escapeHTML(order.clientName)}</strong>
-          <span class="status-pill">نێردراوە</span>
+          <span class="status-pill">هاتییە ناردن</span>
         </header>
         <div class="order-meta">
-          <span>جۆری شوێن: ${escapeHTML(order.placeType)}</span>
-          <span>کات: ${escapeHTML(order.neededAt || 'دیاری نەکراو')}</span>
+          <span>جۆرێ جهی: ${escapeHTML(order.placeType)}</span>
+          <span>دەم: ${escapeHTML(order.neededAt || 'نەهاتە دیارکرن')}</span>
           <span>مۆبایل: ${escapeHTML(order.phone)}</span>
           <span>${escapeHTML(order.address)}</span>
         </div>
@@ -175,7 +255,7 @@ loginForm.addEventListener('submit', event => {
   const user = AUTHORIZED_USERS.find(item => item.username === username && item.password === password);
 
   if (!user) {
-    loginError.textContent = 'یوزەر یان پاسوۆرد هەڵەیە، یان هێشتا ئەدمین ئەم هەژمارەی چالاک نەکردووە.';
+    loginError.textContent = 'یوزەر یان پاسوۆرد هەلەیە، یان هێشتا ئەدمین ئەڤ هەژمارە چالاک نەکرییە.';
     return;
   }
 
@@ -223,7 +303,7 @@ orderForm.addEventListener('submit', event => {
 
   const selectedItems = cart.filter(item => Number(item.amount) > 0);
   if (!selectedItems.length) {
-    orderSuccess.textContent = 'تکایە لانیکەم یەک کاڵا هەڵبژێرە و بڕی بنووسە.';
+    orderSuccess.textContent = 'هیڤیدارین کێمترین یەک مال هەلبژێرە و بڕێ بنڤیسە.';
     return;
   }
 
@@ -245,7 +325,7 @@ orderForm.addEventListener('submit', event => {
   orderForm.reset();
   renderCart();
   renderOrders();
-  orderSuccess.textContent = 'داواکاری نێردرا. لای ئێمە بە ناوی کڕیارەکە تۆمار دەبێت.';
+  orderSuccess.textContent = 'داخواز هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';
   setTimeout(() => { orderSuccess.textContent = ''; }, 6000);
   document.getElementById('ordersList').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
@@ -263,5 +343,6 @@ logoutBtn.addEventListener('click', () => {
   hideDashboard();
 });
 
+translateStaticToBadini();
 const session = store.session;
 if (session) showDashboard(session);
