@@ -7,12 +7,12 @@ function patchAdminForm() {
   const oldEmoji = document.getElementById('productEmoji');
   if (oldEmoji) {
     const label = oldEmoji.closest('label');
-    const hidden = document.createElement('input');
-    hidden.type = 'hidden';
-    hidden.id = 'productEmoji';
-    hidden.value = '';
-    if (label) label.replaceWith(hidden);
-    else oldEmoji.replaceWith(hidden);
+    if (label) {
+      label.innerHTML = 'لینکی وێنەی بەرهەم<input id="productEmoji" type="url" placeholder="https://.../image.jpg">';
+    } else {
+      oldEmoji.type = 'url';
+      oldEmoji.placeholder = 'https://.../image.jpg';
+    }
   }
 
   const note = document.querySelector('#clientForm')?.previousElementSibling;
@@ -52,6 +52,10 @@ function safeText(value) {
     .replaceAll("'",'&#039;');
 }
 
+function isUrl(value) {
+  return /^https?:\/\//i.test(String(value || ''));
+}
+
 async function forceAdminProductList() {
   const box = document.getElementById('adminProducts');
   const dash = document.getElementById('adminDashboard');
@@ -62,7 +66,7 @@ async function forceAdminProductList() {
   const db = window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey);
   const { data, error } = await db
     .from('products')
-    .select('id,name,category,is_active,created_at')
+    .select('id,name,emoji,category,is_active,created_at')
     .eq('is_active', true)
     .order('created_at', { ascending: false });
 
@@ -82,6 +86,7 @@ async function forceAdminProductList() {
         <strong>${safeText(item.name)}</strong>
         <button class="btn btn-soft" type="button" data-force-remove-id="${safeText(item.id)}">لابردن</button>
       </header>
+      ${isUrl(item.emoji) ? `<img src="${safeText(item.emoji)}" alt="${safeText(item.name)}" style="width:100%;height:120px;object-fit:cover;border-radius:18px;margin:12px 0;border:1px solid rgba(255,255,255,.1);">` : ''}
       <div class="order-meta"><span>${safeText(item.category)}</span><span>چالاک</span></div>
     </article>
   `).join('');
