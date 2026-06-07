@@ -1,26 +1,33 @@
 (function(){
-function forceFit(){
-  document.querySelectorAll('.product-order-card img, .item-photo').forEach(function(img){
-    img.style.setProperty('width','100%','important');
-    img.style.setProperty('height','140px','important');
-    img.style.setProperty('object-fit','contain','important');
-    img.style.setProperty('object-position','center center','important');
-    img.style.setProperty('background','#ffffff','important');
-    img.style.setProperty('border-radius','18px','important');
-    img.style.setProperty('padding','8px','important');
-    img.style.setProperty('box-sizing','border-box','important');
-    img.style.setProperty('display','block','important');
-    img.style.setProperty('margin-bottom','12px','important');
-  });
-}
 function style(){
-  if(document.getElementById('imageFitForce360')) return;
+  if(document.getElementById('imageFitStable360')) return;
   var s=document.createElement('style');
-  s.id='imageFitForce360';
-  s.textContent='.product-order-card img,.product-order-card .item-photo{width:100%!important;height:140px!important;object-fit:contain!important;object-position:center center!important;background:#fff!important;border-radius:18px!important;padding:8px!important;box-sizing:border-box!important;display:block!important;margin-bottom:12px!important;}';
+  s.id='imageFitStable360';
+  s.textContent='.product-order-card{min-height:260px!important}.product-order-card img,.product-order-card .item-photo{width:100%!important;height:140px!important;max-height:140px!important;min-height:140px!important;object-fit:contain!important;object-position:center center!important;background:#fff!important;border-radius:18px!important;padding:8px!important;box-sizing:border-box!important;display:block!important;margin:0 0 12px 0!important;transition:none!important;animation:none!important;transform:none!important}.product-order-card .item-photo-empty{height:140px!important;min-height:140px!important;max-height:140px!important;transition:none!important;animation:none!important}';
   document.head.appendChild(s);
 }
-document.addEventListener('DOMContentLoaded',function(){style();forceFit();});
-document.addEventListener('click',function(){setTimeout(forceFit,120);});
-setInterval(function(){style();forceFit();},300);
+function forceOnce(){
+  document.querySelectorAll('.product-order-card img, .item-photo').forEach(function(img){
+    img.style.width='100%';
+    img.style.height='140px';
+    img.style.minHeight='140px';
+    img.style.maxHeight='140px';
+    img.style.objectFit='contain';
+    img.style.objectPosition='center center';
+    img.style.background='#ffffff';
+    img.style.borderRadius='18px';
+    img.style.padding='8px';
+    img.style.boxSizing='border-box';
+    img.style.display='block';
+    img.style.margin='0 0 12px 0';
+    img.style.transition='none';
+    img.style.animation='none';
+    img.style.transform='none';
+  });
+}
+function run(){style();forceOnce();}
+document.addEventListener('DOMContentLoaded',function(){run();setTimeout(run,300);setTimeout(run,1200);});
+document.addEventListener('click',function(){setTimeout(run,180);});
+var observer=new MutationObserver(function(){run();});
+document.addEventListener('DOMContentLoaded',function(){observer.observe(document.body,{childList:true,subtree:true});});
 })();
