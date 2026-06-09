@@ -22,6 +22,25 @@ const supabaseClient = cfg.supabaseUrl && cfg.supabaseAnonKey && window.supabase
   ? window.supabase.createClient(cfg.supabaseUrl, cfg.supabaseAnonKey)
   : null;
 
+const UNIT_LABELS = {
+  kg: 'کیلۆ',
+  g: 'گرام',
+  box: 'سندوق',
+  sack: 'کیس',
+  ginik: 'گینیك',
+  piece: 'پارچە'
+};
+
+function unitLabel(unit) {
+  return UNIT_LABELS[unit] || unit || '';
+}
+
+function unitOptions(selected = 'kg') {
+  return Object.entries(UNIT_LABELS).map(([value, label]) =>
+    `<option value="${value}" ${selected === value ? 'selected' : ''}>${label}</option>`
+  ).join('');
+}
+
 function openLogin() {
   loginError.textContent = '';
   if (typeof loginDialog.showModal === 'function') loginDialog.showModal();
@@ -108,8 +127,7 @@ function renderCart() {
       <div class="cart-name"><strong>${escapeHTML(item.name)}</strong></div>
       <input type="number" min="0" step="0.1" value="${escapeHTML(item.amount)}" placeholder="بڕ" data-amount="${item.id}" required>
       <select data-unit="${item.id}">
-        <option value="kg" ${item.unit === 'kg' ? 'selected' : ''}>کیلۆ</option>
-        <option value="g" ${item.unit === 'g' ? 'selected' : ''}>گرام</option>
+        ${unitOptions(item.unit)}
       </select>
       <button type="button" class="remove-btn" data-remove-product="${item.id}">×</button>
     </div>
@@ -147,7 +165,7 @@ async function renderOrders() {
           <span>${escapeHTML(order.address)}</span>
         </div>
         <div class="ordered-products">
-          ${(order.items || []).map(item => `<span>${escapeHTML(item.name)}: ${escapeHTML(item.amount)} ${item.unit === 'kg' ? 'کیلۆ' : 'گرام'}</span>`).join('')}
+          ${(order.items || []).map(item => `<span>${escapeHTML(item.name)}: ${escapeHTML(item.amount)} ${escapeHTML(unitLabel(item.unit))}</span>`).join('')}
         </div>
         ${order.notes ? `<p><b>تێبینی:</b><br>${escapeHTML(order.notes)}</p>` : ''}
         <small>${new Date(order.created_at).toLocaleString('ku-IQ')}</small>
