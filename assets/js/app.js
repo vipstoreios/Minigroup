@@ -41,6 +41,12 @@ function unitOptions(selected = 'kg') {
   ).join('');
 }
 
+function notifyTelegram(order) {
+  if (!supabaseClient) return;
+  supabaseClient.functions.invoke('send-order-telegram', { body: { order } })
+    .catch(error => console.warn('Telegram notification failed:', error));
+}
+
 function openLogin() {
   loginError.textContent = '';
   if (typeof loginDialog.showModal === 'function') loginDialog.showModal();
@@ -274,6 +280,7 @@ orderForm.addEventListener('submit', async event => {
     return;
   }
 
+  notifyTelegram(order);
   cart = [];
   orderForm.reset();
   renderCart();
