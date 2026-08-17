@@ -11,6 +11,7 @@ const logoutBtn = document.getElementById('logoutBtn');
 const productsGrid = document.getElementById('productsGrid');
 const cartItems = document.getElementById('cartItems');
 const clearCart = document.getElementById('clearCart');
+const phoneInput = document.getElementById('phone');
 if (clearCart) clearCart.textContent = 'ژێبرنا تمام';
 
 let PRODUCTS = [];
@@ -60,7 +61,30 @@ function closeLogin() {
 
 async function showDashboard(user) {
   currentClient = user;
-  clientName.textContent = user.name || user.email || 'کریار';
+
+  if (supabaseClient && user?.id) {
+    const { data: profile, error: profileError } = await supabaseClient
+      .from('client_profiles')
+      .select('name,phone,address,business_type,is_active')
+      .eq('id', user.id)
+      .maybeSingle();
+
+    if (!profileError && profile) {
+      currentClient = {
+        ...user,
+        ...profile,
+        name: profile.name || user.name || user.email,
+        phone: profile.phone || user.phone || ''
+      };
+    }
+  }
+
+  clientName.textContent = currentClient.name || currentClient.email || 'کریار';
+  if (phoneInput) {
+    phoneInput.value = currentClient.phone || '';
+    phoneInput.readOnly = true;
+    phoneInput.setAttribute('aria-readonly', 'true');
+  }
   dashboard.hidden = false;
   document.body.style.overflow = 'hidden';
   if (clearCart) clearCart.textContent = 'ژێبرنا تمام';
@@ -113,13 +137,9 @@ function renderProducts() {
 function addProduct(productId) {
   const product = PRODUCTS.find(item => item.id === productId);
   if (!product) return;
-  if (cart.some(item => item.id === product.id)) {
-    document.getElementById('selectedBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
-    return;
-  }
+  if (cart.some(item => item.id === product.id)) return;
   cart.push({ id: product.id, name: product.name, amount: '', unit: 'kg' });
   renderCart();
-  document.getElementById('selectedBox').scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
 
 function renderCart() {
@@ -216,8 +236,9 @@ loginForm.addEventListener('submit', async event => {
   }
 
   const name = data.user.user_metadata?.name || data.user.email;
+  const phone = data.user.phone || data.user.user_metadata?.phone || '';
   closeLogin();
-  await showDashboard({ id: data.user.id, email: data.user.email, name });
+  await showDashboard({ id: data.user.id, email: data.user.email, name, phone });
 });
 
 productsGrid.addEventListener('click', event => {
@@ -262,13 +283,18 @@ orderForm.addEventListener('submit', async event => {
     return;
   }
 
+  if (!currentClient.phone) {
+    orderSuccess.textContent = 'ژمارا پەیوەندیێ بۆ هەژمارا تە تۆمار نەکراوە. پەیوەندی ب ئەدمین بکە.';
+    return;
+  }
+
   const order = {
     user_id: currentClient.id,
     client_name: currentClient.name || currentClient.email,
     client_email: currentClient.email,
     place_type: document.getElementById('placeType').value,
     needed_at: document.getElementById('neededAt').value || null,
-    phone: document.getElementById('phone').value.trim(),
+    phone: currentClient.phone,
     address: document.getElementById('address').value.trim(),
     items: selectedItems.map(item => ({ id: item.id, name: item.name, amount: item.amount, unit: item.unit })),
     notes: document.getElementById('notes').value.trim()
@@ -283,11 +309,11 @@ orderForm.addEventListener('submit', async event => {
   notifyTelegram(order);
   cart = [];
   orderForm.reset();
+  if (phoneInput) phoneInput.value = currentClient.phone || '';
   renderCart();
   await renderOrders();
   orderSuccess.textContent = 'داخوازی هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';
   setTimeout(() => { orderSuccess.textContent = ''; }, 6000);
-  document.getElementById('ordersList').scrollIntoView({ behavior: 'smooth', block: 'start' });
 });
 
 clearOrders.addEventListener('click', () => {
@@ -299,6 +325,10 @@ logoutBtn.addEventListener('click', async () => {
   if (supabaseClient) await supabaseClient.auth.signOut();
   currentClient = null;
   cart = [];
+  if (phoneInput) {
+    phoneInput.value = '';
+    phoneInput.readOnly = true;
+  }
   hideDashboard();
 });
 
@@ -307,6 +337,11 @@ logoutBtn.addEventListener('click', async () => {
   const { data } = await supabaseClient.auth.getSession();
   if (data.session?.user) {
     const user = data.session.user;
-    await showDashboard({ id: user.id, email: user.email, name: user.user_metadata?.name || user.email });
+    await showDashboard({
+      id: user.id,
+      email: user.email,
+      name: user.user_metadata?.name || user.email,
+      phone: user.phone || user.user_metadata?.phone || ''
+    });
   }
 })();
