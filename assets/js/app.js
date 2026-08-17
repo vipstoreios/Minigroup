@@ -30,21 +30,88 @@ function notifyTelegram(order){ if(!supabaseClient)return; supabaseClient.functi
 function openLogin(){ loginError.textContent=''; if(typeof loginDialog.showModal==='function')loginDialog.showModal(); else loginDialog.setAttribute('open',''); }
 function closeLogin(){ loginDialog.close?.(); loginDialog.removeAttribute('open'); }
 
+function mergeClient(user, profile){
+  const metadata = user?.user_metadata || {};
+  return {
+    ...user,
+    ...(profile || {}),
+    name: profile?.name || user?.name || metadata.name || user?.email || 'کریار',
+    phone: String(profile?.phone || user?.phone || metadata.phone || '').trim(),
+    address: profile?.address || user?.address || metadata.address || '',
+    business_type: profile?.business_type || user?.business_type || metadata.business_type || ''
+  };
+}
+
 async function loadClientProfile(user){
-  if(!supabaseClient || !user?.id) return user;
-  const {data: profile,error} = await supabaseClient.from('client_profiles').select('id,name,phone,address,business_type,is_active').eq('id',user.id).maybeSingle();
-  if(error){ console.warn('Could not load client profile:',error); return user; }
-  if(!profile) return user;
-  return {...user,...profile,name:profile.name||user.name||user.email,phone:String(profile.phone||'').trim()};
+  if(!supabaseClient || !user?.id) return mergeClient(user, null);
+
+  // 1) Preferred path: secure RPC if it exists in Supabase.
+  try {
+    const rpc = await supabaseClient.rpc('get_my_client_profile');
+    if(!rpc.error && rpc.data){
+      const profile = Array.isArray(rpc.data) ? rpc.data[0] : rpc.data;
+      if(profile) return mergeClient(user, profile);
+    }
+  } catch(error){
+    console.warn('Profile RPC unavailable:', error);
+  }
+
+  // 2) Normal RLS-protected read by the logged-in Auth user ID.
+  try {
+    const {data: profile,error} = await supabaseClient
+      .from('client_profiles')
+      .select('id,name,phone,address,business_type,is_active')
+      .eq('id',user.id)
+      .maybeSingle();
+    if(!error && profile) return mergeClient(user, profile);
+    if(error) console.warn('Could not load client profile:', error);
+  } catch(error){
+    console.warn('Could not load client profile:', error);
+  }
+
+  // 3) Fallback for older accounts: reuse the phone from the client's latest own order.
+  try {
+    const {data: lastOrder,error} = await supabaseClient
+      .from('orders')
+      .select('phone,address,client_name,place_type')
+      .eq('user_id',user.id)
+      .order('created_at',{ascending:false})
+      .limit(1)
+      .maybeSingle();
+    if(!error && lastOrder){
+      return mergeClient(user, {
+        name:lastOrder.client_name,
+        phone:lastOrder.phone,
+        address:lastOrder.address,
+        business_type:lastOrder.place_type
+      });
+    }
+  } catch(error){
+    console.warn('Could not load phone from last order:', error);
+  }
+
+  // 4) Final fallback: Auth metadata supplied when the account was created.
+  return mergeClient(user, null);
+}
+
+function fillClientDetails(){
+  clientName.textContent = currentClient?.name || currentClient?.email || 'کریار';
+  if(phoneInput){
+    phoneInput.value = currentClient?.phone || '';
+    phoneInput.readOnly = true;
+    phoneInput.setAttribute('aria-readonly','true');
+  }
 }
 
 async function showDashboard(user){
   currentClient = await loadClientProfile(user);
-  clientName.textContent = currentClient.name || currentClient.email || 'کریار';
-  if(phoneInput){ phoneInput.value=currentClient.phone||''; phoneInput.readOnly=true; phoneInput.setAttribute('aria-readonly','true'); }
-  dashboard.hidden=false; document.body.style.overflow='hidden';
+  fillClientDetails();
+  dashboard.hidden=false;
+  document.body.style.overflow='hidden';
   if(clearCart)clearCart.textContent='ژێبرنا تمام';
-  await loadProducts(); renderCart(); await renderOrders();
+  await loadProducts();
+  renderCart();
+  await renderOrders();
 }
 function hideDashboard(){ dashboard.hidden=true; document.body.style.overflow=''; }
 
@@ -64,21 +131,60 @@ function escapeHTML(value){ return String(value||'').replaceAll('&','&amp;').rep
 document.querySelectorAll('[data-open-login]').forEach(b=>b.addEventListener('click',openLogin));
 document.querySelectorAll('[data-close-login]').forEach(b=>b.addEventListener('click',closeLogin));
 loginDialog.addEventListener('click',event=>{const rect=loginDialog.querySelector('.dialog-card').getBoundingClientRect();if(event.clientX<rect.left||event.clientX>rect.right||event.clientY<rect.top||event.clientY>rect.bottom)closeLogin();});
-loginForm.addEventListener('submit',async event=>{event.preventDefault();loginError.textContent='';if(!supabaseClient){loginError.textContent='Supabase هێشتا نەهاتە گرێدان.';return;}const email=document.getElementById('username').value.trim(),password=document.getElementById('password').value.trim();const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});if(error||!data.user){loginError.textContent=error?.message||'ئەم هەژمارە ڕێپێدراو نییە یان پاسوۆرد هەلەیە.';return;}closeLogin();await showDashboard({id:data.user.id,email:data.user.email,name:data.user.user_metadata?.name||data.user.email,phone:''});});
+loginForm.addEventListener('submit',async event=>{
+  event.preventDefault(); loginError.textContent='';
+  if(!supabaseClient){loginError.textContent='Supabase هێشتا نەهاتە گرێدان.';return;}
+  const email=document.getElementById('username').value.trim();
+  const password=document.getElementById('password').value.trim();
+  const {data,error}=await supabaseClient.auth.signInWithPassword({email,password});
+  if(error||!data.user){loginError.textContent=error?.message||'ئەم هەژمارە ڕێپێدراو نییە یان پاسوۆرد هەلەیە.';return;}
+  closeLogin();
+  await showDashboard({
+    id:data.user.id,
+    email:data.user.email,
+    phone:data.user.phone || '',
+    user_metadata:data.user.user_metadata || {},
+    name:data.user.user_metadata?.name || data.user.email
+  });
+});
 productsGrid.addEventListener('click',event=>{const b=event.target.closest('[data-add-product]');if(b)addProduct(b.dataset.addProduct);});
 cartItems.addEventListener('input',event=>{const input=event.target.closest('[data-amount]');if(!input)return;const item=cart.find(p=>p.id===input.dataset.amount);if(item)item.amount=input.value;});
 cartItems.addEventListener('change',event=>{const s=event.target.closest('[data-unit]');if(!s)return;const item=cart.find(p=>p.id===s.dataset.unit);if(item)item.unit=s.value;});
 cartItems.addEventListener('click',event=>{const b=event.target.closest('[data-remove-product]');if(!b)return;cart=cart.filter(i=>i.id!==b.dataset.removeProduct);renderCart();});
 clearCart.addEventListener('click',()=>{cart=[];renderCart();});
-orderForm.addEventListener('submit',async event=>{event.preventDefault();if(!currentClient)return openLogin();
-  // Always refresh the profile at submit time so the phone is the latest value saved by Admin Panel.
+orderForm.addEventListener('submit',async event=>{
+  event.preventDefault();
+  if(!currentClient)return openLogin();
   currentClient=await loadClientProfile(currentClient);
-  if(phoneInput)phoneInput.value=currentClient.phone||'';
-  const selectedItems=cart.filter(item=>Number(item.amount)>0);if(!selectedItems.length){orderSuccess.textContent='هیڤیدارین کێمترین یەک داخوازی هەلبژێرە و بڕێ بنڤیسە.';return;}
-  if(!currentClient.phone){orderSuccess.textContent='ژمارا پەیوەندیێ بۆ هەژمارا تە لە ئەدمین پانێڵ تۆمار نەکراوە.';return;}
+  fillClientDetails();
+  const selectedItems=cart.filter(item=>Number(item.amount)>0);
+  if(!selectedItems.length){orderSuccess.textContent='هیڤیدارین کێمترین یەک داخوازی هەلبژێرە و بڕێ بنڤیسە.';return;}
+  if(!currentClient.phone){orderSuccess.textContent='ژمارا پەیوەندیێ بۆ هەژمارا تە لە ئەدمین پانێڵ تۆمار نەکراوە یان profile ـەکە ب هەژمارێ نەگرێدراوە.';return;}
   const order={user_id:currentClient.id,client_name:currentClient.name||currentClient.email,client_email:currentClient.email,place_type:document.getElementById('placeType').value,needed_at:document.getElementById('neededAt').value||null,phone:currentClient.phone,address:document.getElementById('address').value.trim(),items:selectedItems.map(item=>({id:item.id,name:item.name,amount:item.amount,unit:item.unit})),notes:document.getElementById('notes').value.trim()};
-  const {error}=await supabaseClient.from('orders').insert(order);if(error){orderSuccess.textContent=error.message;return;}notifyTelegram(order);cart=[];orderForm.reset();if(phoneInput)phoneInput.value=currentClient.phone||'';renderCart();await renderOrders();orderSuccess.textContent='داخوازی هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';setTimeout(()=>{orderSuccess.textContent='';},6000);
+  const {error}=await supabaseClient.from('orders').insert(order);
+  if(error){orderSuccess.textContent=error.message;return;}
+  notifyTelegram(order);
+  cart=[];
+  orderForm.reset();
+  fillClientDetails();
+  renderCart();
+  await renderOrders();
+  orderSuccess.textContent='داخوازی هاتە ناردن. لای مە ب ناڤێ کریاری تۆمار دبیت.';
+  setTimeout(()=>{orderSuccess.textContent='';},6000);
 });
 clearOrders.addEventListener('click',()=>{cart=[];renderCart();});
 logoutBtn.addEventListener('click',async()=>{if(supabaseClient)await supabaseClient.auth.signOut();currentClient=null;cart=[];if(phoneInput){phoneInput.value='';phoneInput.readOnly=true;}hideDashboard();});
-(async function restoreSession(){if(!supabaseClient)return;const {data}=await supabaseClient.auth.getSession();if(data.session?.user){const user=data.session.user;await showDashboard({id:user.id,email:user.email,name:user.user_metadata?.name||user.email,phone:''});}})();
+(async function restoreSession(){
+  if(!supabaseClient)return;
+  const {data}=await supabaseClient.auth.getSession();
+  if(data.session?.user){
+    const user=data.session.user;
+    await showDashboard({
+      id:user.id,
+      email:user.email,
+      phone:user.phone || '',
+      user_metadata:user.user_metadata || {},
+      name:user.user_metadata?.name || user.email
+    });
+  }
+})();
